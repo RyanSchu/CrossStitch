@@ -1,11 +1,17 @@
+######################################################################################
+
+#IMPORT LIBRARIES
+
+######################################################################################
+
 # example of training a gan on mnist
+import numpy as np
 from numpy import expand_dims
 from numpy import zeros
 from numpy import ones
 from numpy import vstack
 from numpy.random import randn
 from numpy.random import randint
-from keras.datasets.mnist import load_data
 from keras.optimizers import Adam
 from keras.models import Sequential
 from keras.layers import Dense
@@ -16,6 +22,35 @@ from keras.layers import Conv2DTranspose
 from keras.layers import LeakyReLU
 from keras.layers import Dropout
 from matplotlib import pyplot
+from PIL import Image
+import argparse as ap
+from os import listdir
+from os.path import isfile, join
+##################################################################################
+
+#DEFINE FLAGS AND USER INPUTS
+
+##################################################################################
+
+parser = ap.ArgumentParser()
+parser.add_argument('--indir', help = 'directory containing images to be used')
+parser.add_argument('--outdir', help = 'directory to output training results.')
+args = parser.parse_args()
+
+indir=args.indir
+outdir=args.outdir
+
+
+##################################################################################
+
+#DEFINE FUNCTIONS
+#NOTE: The majority of these functions have been taken from 
+#https://machinelearningmastery.com/how-to-develop-a-generative-adversarial-network-for-an-mnist-handwritten-digits-from-scratch-in-keras/
+#The following functions have been changed
+
+
+#The following functions have been created
+##################################################################################
 
 # define the standalone discriminator model
 def define_discriminator(in_shape=(28,28,1)):
@@ -65,24 +100,64 @@ def define_gan(g_model, d_model):
 	model.compile(loss='binary_crossentropy', optimizer=opt)
 	return model
 
+
+#Following two functions were taken from https://note.nkmk.me/en/python-pillow-image-crop-trimming/
+#Credit to the original author
+
+def crop_center(pil_img, crop_width, crop_height):
+    img_width, img_height = pil_img.size
+    return pil_img.crop(((img_width - crop_width) // 2,
+                         (img_height - crop_height) // 2,
+                         (img_width + crop_width) // 2,
+                         (img_height + crop_height) // 2))
+
+def crop_max_square(pil_img):
+    return crop_center(pil_img, min(pil_img.size), min(pil_img.size))
+
+
+
+#takes in an image path, reads it, center crops, resizes it, and then returns the np.array
+def regularize_image(imagepath,resize_dim=64):
+  im = Image.open(imagepath)
+  im = crop_max_square(im)
+  # im = im / 255.0
+  resize_square=(resize_dim,resize_dim)
+  im = im.resize(resize_square)
+  return np.array(im)
+
+def process_image_dir(imagedir=indir):
+  #image_suffix = [ ".jpg"] #Eventually need to add a check for file name extensions
+  #need to add in check fo directory string ends in /
+  file_list=[join(imagedir, f) for f in listdir(imagedir) if isfile(join(imagedir, f))]
+  #print(file_list)
+  tmp=regularize_image(file_list[1])
+  print(tmp)
+  image_list= [ regularize_image(x) for x in file_list]
+  return image_list
+
+#CHANGE TO CUSTOM DATASET
 # load and prepare mnist training images
 def load_real_samples():
 	# load mnist dataset
-	(trainX, _), (_, _) = load_data()
+	trainX = process_image_dir()
 	# expand to 3d, e.g. add channels dimension
-	X = expand_dims(trainX, axis=-1)
+	#X = expand_dims(trainX, axis=-1) #Data is already 3d so ignore
 	# convert from unsigned ints to floats
-	X = X.astype('float32')
+	#X = X.astype('float32')
 	# scale from [0,255] to [0,1]
-	X = X / 255.0
-	return X
 
+	return trainX
+
+#MAKE SURE THIS WORKS WITH CUSTOM DATASET
 # select real samples
 def generate_real_samples(dataset, n_samples):
 	# choose random instances
-	ix = randint(0, dataset.shape[0], n_samples)
+	ix = randint(0, len(dataset), n_samples)
 	# retrieve selected images
-	X = dataset[ix]
+	X = [ dataset[i] for i in ix ]
+	print(type(X))
+	print(len(X))
+	print(type(X[1]))
 	# generate 'real' class labels (1)
 	y = ones((n_samples, 1))
 	return X, y
@@ -116,12 +191,12 @@ def save_plot(examples, epoch, n=10):
 		# plot raw pixel data
 		pyplot.imshow(examples[i, :, :, 0], cmap='gray_r')
 	# save plot to file
-	filename = 'generated_plot_e%03d.png' % (epoch+1)
+	filename = outdir + 'generated_plot_e%03d.png' % (epoch+1)
 	pyplot.savefig(filename)
 	pyplot.close()
 
 # evaluate the discriminator, plot generated images, save generator model
-def summarize_performance(epoch, g_model, d_model, dataset, latent_dim, n_samples=100):
+def summarize_performance(epoch, g_model, d_model, dataset, latent_dim, n_samples=32):
 	# prepare real samples
 	X_real, y_real = generate_real_samples(dataset, n_samples)
 	# evaluate discriminator on real examples
@@ -135,12 +210,12 @@ def summarize_performance(epoch, g_model, d_model, dataset, latent_dim, n_sample
 	# save plot
 	save_plot(x_fake, epoch)
 	# save the generator model tile file
-	filename = 'generator_model_%03d.h5' % (epoch + 1)
+	filename = outdir + 'generator_model_%03d.h5' % (epoch + 1)
 	g_model.save(filename)
 
 # train the generator and discriminator
 def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batch=256):
-	bat_per_epo = int(dataset.shape[0] / n_batch)
+	bat_per_epo = int(len(dataset) / n_batch)
 	half_batch = int(n_batch / 2)
 	# manually enumerate epochs
 	for i in range(n_epochs):
