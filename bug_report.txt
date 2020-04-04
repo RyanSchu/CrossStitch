@@ -1,0 +1,71 @@
+Using TensorFlow backend.
+2020-04-04 01:32:48.861995: W tensorflow/stream_executor/platform/default/dso_loader.cc:55] Could not load dynamic library 'libnvinfer.so.6'; dlerror: libnvinfer.so.6: cannot open shared object file: No such file or directory
+2020-04-04 01:32:48.862144: W tensorflow/stream_executor/platform/default/dso_loader.cc:55] Could not load dynamic library 'libnvinfer_plugin.so.6'; dlerror: libnvinfer_plugin.so.6: cannot open shared object file: No such file or directory
+2020-04-04 01:32:48.862162: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:30] Cannot dlopen some TensorRT libraries. If you would like to use Nvidia GPU with TensorRT, please make sure the missing libraries mentioned above are installed properly.
+2020-04-04 01:32:50.635043: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcuda.so.1
+2020-04-04 01:32:50.684854: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1555] Found device 0 with properties:
+pciBusID: 0000:02:00.0 name: GeForce GTX 1080 Ti computeCapability: 6.1
+coreClock: 1.582GHz coreCount: 28 deviceMemorySize: 10.92GiB deviceMemoryBandwidth: 451.17GiB/s
+2020-04-04 01:32:50.686002: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1555] Found device 1 with properties:
+pciBusID: 0000:03:00.0 name: GeForce GTX 1080 Ti computeCapability: 6.1
+coreClock: 1.582GHz coreCount: 28 deviceMemorySize: 10.92GiB deviceMemoryBandwidth: 451.17GiB/s
+2020-04-04 01:32:50.686235: W tensorflow/stream_executor/platform/default/dso_loader.cc:55] Could not load dynamic library 'libcudart.so.10.1'; dlerror: libcudart.so.10.1: cannot open shared object file: No such file or directory
+2020-04-04 01:32:50.686339: W tensorflow/stream_executor/platform/default/dso_loader.cc:55] Could not load dynamic library 'libcublas.so.10'; dlerror: libcublas.so.10: cannot open shared object file: No such file or directory
+2020-04-04 01:32:50.686434: W tensorflow/stream_executor/platform/default/dso_loader.cc:55] Could not load dynamic library 'libcufft.so.10'; dlerror: libcufft.so.10: cannot open shared object file: No such file or directory
+2020-04-04 01:32:50.686529: W tensorflow/stream_executor/platform/default/dso_loader.cc:55] Could not load dynamic library 'libcurand.so.10'; dlerror: libcurand.so.10: cannot open shared object file: No such file or directory
+2020-04-04 01:32:50.686623: W tensorflow/stream_executor/platform/default/dso_loader.cc:55] Could not load dynamic library 'libcusolver.so.10'; dlerror: libcusolver.so.10: cannot open shared object file: No such file or directory
+2020-04-04 01:32:50.686716: W tensorflow/stream_executor/platform/default/dso_loader.cc:55] Could not load dynamic library 'libcusparse.so.10'; dlerror: libcusparse.so.10: cannot open shared object file: No such file or directory
+2020-04-04 01:32:50.686809: W tensorflow/stream_executor/platform/default/dso_loader.cc:55] Could not load dynamic library 'libcudnn.so.7'; dlerror: libcudnn.so.7: cannot open shared object file: No such file or directory
+2020-04-04 01:32:50.686824: W tensorflow/core/common_runtime/gpu/gpu_device.cc:1592] Cannot dlopen some GPU libraries. Please make sure the missing libraries mentioned above are installed properly if you would like to use GPU. Follow the guide at https://www.tensorflow.org/install/gpu for how to download and setup the required libraries for your platform.
+Skipping registering GPU devices...
+2020-04-04 01:32:50.687257: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2020-04-04 01:32:50.718287: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2295000000 Hz
+2020-04-04 01:32:50.722619: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x55e4c5678410 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-04-04 01:32:50.722690: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+2020-04-04 01:32:51.255506: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x55e4c56de750 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2020-04-04 01:32:51.255561: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): GeForce GTX 1080 Ti, Compute Capability 6.1
+2020-04-04 01:32:51.255577: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (1): GeForce GTX 1080 Ti, Compute Capability 6.1
+2020-04-04 01:32:51.255910: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1096] Device interconnect StreamExecutor with strength 1 edge matrix:
+2020-04-04 01:32:51.255929: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1102]
+Traceback (most recent call last):
+  File "/home/ryan/.local/lib/python3.7/site-packages/tensorflow_core/python/framework/ops.py", line 1619, in _create_c_op
+    c_op = c_api.TF_FinishOperation(op_desc)
+tensorflow.python.framework.errors_impl.InvalidArgumentError: Depth of input (1) is not a multiple of input depth of filter (3) for 'sequential_1/conv2d_1/convolution' (op: 'Conv2D') with input shapes: [?,?,?,1], [3,3,3,64].
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/ryan/software/CrossStitch/Crossstitch_GAN.py", line 269, in <module>
+    gan_model = define_gan(g_model, d_model)
+  File "/home/ryan/software/CrossStitch/Crossstitch_GAN.py", line 109, in define_gan
+    model.add(d_model)
+  File "/home/ryan/anaconda3/lib/python3.7/site-packages/keras/engine/sequential.py", line 182, in add
+    output_tensor = layer(self.outputs[0])
+  File "/home/ryan/anaconda3/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py", line 75, in symbolic_fn_wrapper
+    return func(*args, **kwargs)
+  File "/home/ryan/anaconda3/lib/python3.7/site-packages/keras/engine/base_layer.py", line 489, in __call__
+    output = self.call(inputs, **kwargs)
+  File "/home/ryan/anaconda3/lib/python3.7/site-packages/keras/engine/network.py", line 583, in call
+    output_tensors, _, _ = self.run_internal_graph(inputs, masks)
+  File "/home/ryan/anaconda3/lib/python3.7/site-packages/keras/engine/network.py", line 740, in run_internal_graph
+    layer.call(computed_tensor, **kwargs))
+  File "/home/ryan/anaconda3/lib/python3.7/site-packages/keras/layers/convolutional.py", line 171, in call
+    dilation_rate=self.dilation_rate)
+  File "/home/ryan/anaconda3/lib/python3.7/site-packages/keras/backend/tensorflow_backend.py", line 3717, in conv2d
+    **kwargs)
+  File "/home/ryan/.local/lib/python3.7/site-packages/tensorflow_core/python/ops/nn_ops.py", line 918, in convolution_v2    name=name)
+  File "/home/ryan/.local/lib/python3.7/site-packages/tensorflow_core/python/ops/nn_ops.py", line 1010, in convolution_internal
+    name=name)
+  File "/home/ryan/.local/lib/python3.7/site-packages/tensorflow_core/python/ops/gen_nn_ops.py", line 969, in conv2d
+    data_format=data_format, dilations=dilations, name=name)
+  File "/home/ryan/.local/lib/python3.7/site-packages/tensorflow_core/python/framework/op_def_library.py", line 742, in _apply_op_helper
+    attrs=attr_protos, op_def=op_def)
+  File "/home/ryan/.local/lib/python3.7/site-packages/tensorflow_core/python/framework/func_graph.py", line 595, in _create_op_internal
+    compute_device)
+  File "/home/ryan/.local/lib/python3.7/site-packages/tensorflow_core/python/framework/ops.py", line 3322, in _create_op_internal
+    op_def=op_def)
+  File "/home/ryan/.local/lib/python3.7/site-packages/tensorflow_core/python/framework/ops.py", line 1786, in __init__
+    control_input_ops)
+  File "/home/ryan/.local/lib/python3.7/site-packages/tensorflow_core/python/framework/ops.py", line 1622, in _create_c_op
+    raise ValueError(str(e))
+ValueError: Depth of input (1) is not a multiple of input depth of filter (3) for 'sequential_1/conv2d_1/convolution' (op: 'Conv2D') with input shapes: [?,?,?,1], [3,3,3,64].
