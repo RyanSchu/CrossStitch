@@ -35,10 +35,16 @@ from os.path import isfile, join
 parser = ap.ArgumentParser()
 parser.add_argument('--indir', help = 'directory containing images to be used')
 parser.add_argument('--outdir', help = 'directory to output training results.')
+parser.add_argument('--nsample',help='n real samples to use in a training epoch. default is 32',default=32,type=int)
+parser.add_argument('--seed',help='seed number, default is 1234',default=1234,type=int)
+parser.add_argument('--resize',help='INT N signifying the NxN pixel dimension of the data',default=28)
 args = parser.parse_args()
+
+np.random.seed(args.seed)
 
 indir=args.indir
 outdir=args.outdir
+
 
 
 ##################################################################################
@@ -53,12 +59,18 @@ outdir=args.outdir
 ##################################################################################
 
 # define the standalone discriminator model
-def define_discriminator(in_shape=(28,28,1)):
+def define_discriminator(in_shape=(28,28,3)):
 	model = Sequential()
-	model.add(Conv2D(64, (3,3), strides=(2, 2), padding='same', input_shape=in_shape))
+	model.add(Conv2D(64, (3,3), padding='same', input_shape=in_shape))
 	model.add(LeakyReLU(alpha=0.2))
-	model.add(Dropout(0.4))
-	model.add(Conv2D(64, (3,3), strides=(2, 2), padding='same'))
+	# downsample
+	model.add(Conv2D(128, (3,3), strides=(2,2), padding='same'))
+	model.add(LeakyReLU(alpha=0.2))
+	# downsample
+	model.add(Conv2D(128, (3,3), strides=(2,2), padding='same'))
+	model.add(LeakyReLU(alpha=0.2))
+	# downsample
+	model.add(Conv2D(256, (3,3), strides=(2,2), padding='same'))
 	model.add(LeakyReLU(alpha=0.2))
 	model.add(Dropout(0.4))
 	model.add(Flatten())
@@ -117,23 +129,31 @@ def crop_max_square(pil_img):
 
 
 #takes in an image path, reads it, center crops, resizes it, and then returns the np.array
-def regularize_image(imagepath,resize_dim=64):
+def regularize_image(imagepath,resize_dim=args.resize):
   im = Image.open(imagepath)
   im = crop_max_square(im)
   # im = im / 255.0
   resize_square=(resize_dim,resize_dim)
   im = im.resize(resize_square)
-  return np.array(im)
+  im = np.array(im)
+  im = np.expand_dims(im, axis=0)
+  print(im.shape)
+  return im
 
 def process_image_dir(imagedir=indir):
   #image_suffix = [ ".jpg"] #Eventually need to add a check for file name extensions
   #need to add in check fo directory string ends in /
   file_list=[join(imagedir, f) for f in listdir(imagedir) if isfile(join(imagedir, f))]
   #print(file_list)
-  tmp=regularize_image(file_list[1])
-  print(tmp)
+  # tmp=regularize_image(file_list[1])
+  # print(tmp)
   image_list= [ regularize_image(x) for x in file_list]
-  return image_list
+  image_list = [ x for x in image_list if x.shape[3] is 3]
+  print(type(image_list))
+  print(len(image_list))
+  X = np.vstack(image_list)
+  print(X.shape)
+  return X
 
 #CHANGE TO CUSTOM DATASET
 # load and prepare mnist training images
@@ -152,12 +172,9 @@ def load_real_samples():
 # select real samples
 def generate_real_samples(dataset, n_samples):
 	# choose random instances
-	ix = randint(0, len(dataset), n_samples)
+	ix = randint(0, dataset.shape[0], n_samples)
 	# retrieve selected images
-	X = [ dataset[i] for i in ix ]
-	print(type(X))
-	print(len(X))
-	print(type(X[1]))
+	X = dataset[ix]
 	# generate 'real' class labels (1)
 	y = ones((n_samples, 1))
 	return X, y
@@ -196,9 +213,10 @@ def save_plot(examples, epoch, n=10):
 	pyplot.close()
 
 # evaluate the discriminator, plot generated images, save generator model
-def summarize_performance(epoch, g_model, d_model, dataset, latent_dim, n_samples=32):
+def summarize_performance(epoch, g_model, d_model, dataset, latent_dim, n_samples=args.nsample):
 	# prepare real samples
 	X_real, y_real = generate_real_samples(dataset, n_samples)
+
 	# evaluate discriminator on real examples
 	_, acc_real = d_model.evaluate(X_real, y_real, verbose=0)
 	# prepare fake examples
@@ -215,7 +233,7 @@ def summarize_performance(epoch, g_model, d_model, dataset, latent_dim, n_sample
 
 # train the generator and discriminator
 def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batch=256):
-	bat_per_epo = int(len(dataset) / n_batch)
+	bat_per_epo = int(dataset.shape[0] / n_batch)
 	half_batch = int(n_batch / 2)
 	# manually enumerate epochs
 	for i in range(n_epochs):

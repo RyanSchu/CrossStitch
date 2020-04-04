@@ -9,5 +9,5 @@
 
 /home/ryan/anaconda3/bin/python /home/ryan/software/CrossStitch/Crossstitch_GAN.py \
 --indir /home/ryan/software/CrossStitch/data/Personal_Art_References/ \
---outdir /home/ryan/software/CrossStitch/out/Personal_Art_References/
-
+--outdir /home/ryan/software/CrossStitch/out/Personal_Art_References/ \
+--nsample 32
